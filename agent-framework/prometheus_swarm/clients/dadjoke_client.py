@@ -183,13 +183,16 @@ class DadJokeClient(Client):
             response.raise_for_status()
             search_data = response.json()
             
+            original_total_jokes = search_data.get('total_jokes', 0)
+            original_results = search_data.get('results', [])
+            
             matching_jokes = [
-                joke['joke'] for joke in search_data.get('results', []) 
+                joke['joke'] for joke in original_results 
                 if term.lower() in joke['joke'].lower()
             ]
             
             return {
-                "total_jokes": len(matching_jokes),
+                "total_jokes": original_total_jokes,
                 "jokes": matching_jokes
             }
         
