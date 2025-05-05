@@ -51,9 +51,11 @@ def handle_api_error(error):
         return error
     elif isinstance(error, NetworkError):
         return error
-    elif "timeout" in str(error).lower():
-        return NetworkError("API request timed out")
-    elif "connection" in str(error).lower():
-        return NetworkError("Network connection error")
-    else:
-        return APIError(f"Unexpected API error: {str(error)}")
+    elif isinstance(error, Exception):
+        error_str = str(error).lower()
+        if "timeout" in error_str:
+            return NetworkError("API request timed out")
+        elif "connection" in error_str:
+            return NetworkError("Network connection error")
+    
+    return APIError(f"Unexpected API error: {str(error)}")
