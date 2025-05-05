@@ -183,15 +183,11 @@ class DadJokeClient(Client):
             response.raise_for_status()
             search_data = response.json()
             
-            all_jokes = search_data.get('results', [])
-            filtered_jokes = [
-                joke['joke'] for joke in all_jokes 
-                if term.lower() in joke['joke'].lower()
-            ]
+            all_jokes = [joke['joke'] for joke in search_data.get('results', [])]
             
             return {
                 "total_jokes": search_data.get('total_jokes', 0),
-                "jokes": filtered_jokes
+                "jokes": all_jokes
             }
         
         except requests.RequestException as e:
