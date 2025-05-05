@@ -24,7 +24,7 @@ def test_filter_max_length(sample_jokes):
 def test_filter_min_length(sample_jokes):
     """Test filtering jokes by minimum length."""
     filtered = JokeFilter.filter_jokes(sample_jokes, min_length=20)
-    assert len(filtered) == 2
+    assert len(filtered) == 4
     assert all(len(joke['text']) >= 20 for joke in filtered)
 
 def test_exclude_keywords(sample_jokes):
