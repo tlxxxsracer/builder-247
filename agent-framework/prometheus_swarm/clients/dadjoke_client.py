@@ -5,11 +5,12 @@ This module provides a client for fetching dad jokes from the icanhazdadjoke.com
 """
 
 import requests
-from typing import Dict, Optional
-from .base_client import BaseClient
+from typing import Dict, Optional, List
+from .base_client import Client
+from ..types import MessageContent, ToolDefinition
 
 
-class DadJokeClient(BaseClient):
+class DadJokeClient(Client):
     """
     A client for interacting with the icanhazdadjoke.com API.
 
@@ -23,6 +24,80 @@ class DadJokeClient(BaseClient):
         "Accept": "application/json",
         "User-Agent": "Prometheus Swarm Dad Joke Client (https://github.com/your-repo)"
     }
+
+    def __init__(self, model: Optional[str] = "dad-joke-client"):
+        """
+        Initialize the DadJokeClient.
+
+        Args:
+            model (Optional[str]): Client identifier.
+        """
+        super().__init__(model=model)
+
+    def _get_default_model(self) -> str:
+        """Get the default model name."""
+        return "dad-joke-client"
+
+    def _get_api_name(self) -> str:
+        """Get the name of the API."""
+        return "DadJoke"
+
+    def _convert_tool_to_api_format(self, tool: ToolDefinition) -> Dict:
+        """
+        Convert tool to API format. Not implemented for this client.
+
+        Args:
+            tool (ToolDefinition): Tool definition.
+
+        Returns:
+            Dict: Converted tool (not used in this client).
+        """
+        return {}
+
+    def _convert_message_to_api_format(self, message: Dict) -> Dict:
+        """
+        Convert message to API format. Not used in this client.
+
+        Args:
+            message (Dict): Message dictionary.
+
+        Returns:
+            Dict: Converted message (not used in this client).
+        """
+        return {}
+
+    def _convert_api_response_to_message(self, response: Any) -> MessageContent:
+        """
+        Convert API response to message format. Not used in this client.
+
+        Args:
+            response (Any): API response.
+
+        Returns:
+            MessageContent: Converted response (not used in this client).
+        """
+        return {"role": "system", "content": [{"type": "text", "text": response}]}
+
+    def _make_api_call(self, *args, **kwargs) -> Any:
+        """
+        Placeholder for API call. Actual API calls are in specific methods.
+
+        Raises:
+            NotImplementedError: This method is not implemented.
+        """
+        raise NotImplementedError("Use specific methods for API calls")
+
+    def _format_tool_response(self, response: str) -> Dict:
+        """
+        Format tool response. Not used in this client.
+
+        Args:
+            response (str): Tool response.
+
+        Returns:
+            Dict: Formatted response (placeholder).
+        """
+        return {"role": "tool", "content": [{"type": "text", "text": response}]}
 
     def get_random_joke(self) -> str:
         """
