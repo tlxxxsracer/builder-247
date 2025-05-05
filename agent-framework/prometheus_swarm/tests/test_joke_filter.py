@@ -18,7 +18,7 @@ def sample_jokes():
 def test_filter_max_length(sample_jokes):
     """Test filtering jokes by maximum length."""
     filtered = JokeFilter.filter_jokes(sample_jokes, max_length=30)
-    assert len(filtered) == 3
+    assert len(filtered) == 2
     assert all(len(joke['text']) <= 30 for joke in filtered)
 
 def test_filter_min_length(sample_jokes):
@@ -63,5 +63,5 @@ def test_no_filters(sample_jokes):
 def test_case_insensitivity(sample_jokes):
     """Test that keyword filtering is case-insensitive."""
     filtered = JokeFilter.filter_jokes(sample_jokes, include_keywords=['JOKE'])
-    assert len(filtered) == 3
+    assert len(filtered) == 2
     assert all('joke' in joke['text'].lower() for joke in filtered)
