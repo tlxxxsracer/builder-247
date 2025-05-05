@@ -38,7 +38,8 @@ class JokeFilter:
         filtered_jokes = []
         
         for joke in jokes:
-            joke_text = joke.get('text', '').lower()
+            joke_text = joke.get('text', '')
+            lower_joke_text = joke_text.lower()
             
             # Length checks
             if max_length is not None and len(joke_text) > max_length:
@@ -48,11 +49,11 @@ class JokeFilter:
                 continue
             
             # Exclude keywords check
-            if any(kw in joke_text for kw in exclude_keywords):
+            if any(kw in lower_joke_text for kw in exclude_keywords):
                 continue
             
             # Include keywords check
-            if include_keywords and not any(kw in joke_text for kw in include_keywords):
+            if include_keywords and not any(kw in lower_joke_text for kw in include_keywords):
                 continue
             
             filtered_jokes.append(joke)
