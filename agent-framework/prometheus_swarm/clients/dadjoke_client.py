@@ -5,7 +5,7 @@ This module provides a client for fetching dad jokes from the icanhazdadjoke.com
 """
 
 import requests
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 from .base_client import Client
 from ..types import MessageContent, ToolDefinition
 
@@ -76,7 +76,7 @@ class DadJokeClient(Client):
         Returns:
             MessageContent: Converted response (not used in this client).
         """
-        return {"role": "system", "content": [{"type": "text", "text": response}]}
+        return {"role": "system", "content": [{"type": "text", "text": str(response)}]}
 
     def _make_api_call(self, *args, **kwargs) -> Any:
         """
