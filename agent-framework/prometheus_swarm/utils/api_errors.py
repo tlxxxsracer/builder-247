@@ -43,19 +43,14 @@ def handle_api_error(error):
     Returns or Raises:
         APIError: Converted and more specific API error
     """
-    if isinstance(error, AuthenticationError):
-        return error
-    elif isinstance(error, RateLimitError):
-        return error
-    elif isinstance(error, ResourceNotFoundError):
-        return error
-    elif isinstance(error, NetworkError):
+    if isinstance(error, (AuthenticationError, RateLimitError, 
+                           ResourceNotFoundError, NetworkError)):
         return error
     
     error_str = str(error).lower()
     if "timeout" in error_str:
         return NetworkError("API request timed out")
-    elif "connection" in error_str:
+    elif "connection" in error_str or "refused" in error_str:
         return NetworkError("Network connection error")
     
     return APIError(f"Unexpected API error: {str(error)}")
