@@ -60,27 +60,31 @@ def test_network_error():
 
 def test_handle_api_error_authentication():
     """Test error handling for authentication errors."""
-    with pytest.raises(AuthenticationError):
-        handle_api_error(AuthenticationError("Auth failed"))
+    result = handle_api_error(AuthenticationError("Auth failed"))
+    assert isinstance(result, AuthenticationError)
+    assert str(result) == "Auth failed"
 
 def test_handle_api_error_rate_limit():
     """Test error handling for rate limit errors."""
-    with pytest.raises(RateLimitError):
-        handle_api_error(RateLimitError("Rate limit"))
+    result = handle_api_error(RateLimitError("Rate limit"))
+    assert isinstance(result, RateLimitError)
+    assert str(result) == "Rate limit"
 
 def test_handle_api_error_network_timeout():
     """Test error handling for timeout errors."""
-    with pytest.raises(NetworkError, match="API request timed out"):
-        handle_api_error(Exception("Request timed out"))
+    result = handle_api_error(Exception("Request timed out"))
+    assert isinstance(result, NetworkError)
+    assert str(result) == "API request timed out"
 
 def test_handle_api_error_network_connection():
     """Test error handling for connection errors."""
-    with pytest.raises(NetworkError, match="Network connection error"):
-        handle_api_error(Exception("Connection refused"))
+    result = handle_api_error(Exception("Connection refused"))
+    assert isinstance(result, NetworkError)
+    assert str(result) == "Network connection error"
 
 def test_handle_api_error_unexpected():
     """Test handling of unexpected errors."""
-    error = handle_api_error(Exception("Unknown error"))
+    result = handle_api_error(Exception("Unknown error"))
     
-    assert isinstance(error, APIError)
-    assert "Unexpected API error" in str(error)
+    assert isinstance(result, APIError)
+    assert "Unexpected API error" in str(result)
