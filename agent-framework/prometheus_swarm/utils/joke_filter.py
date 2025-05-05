@@ -32,17 +32,12 @@ class JokeFilter:
         if not jokes:
             return []
         
-        exclude_keywords = exclude_keywords or []
-        include_keywords = include_keywords or []
-        
-        # Convert all keywords to lowercase for case-insensitive matching
-        exclude_keywords = [kw.lower() for kw in exclude_keywords]
-        include_keywords = [kw.lower() for kw in include_keywords]
+        exclude_keywords = [kw.lower() for kw in (exclude_keywords or [])]
+        include_keywords = [kw.lower() for kw in (include_keywords or [])]
         
         filtered_jokes = []
         
         for joke in jokes:
-            # Check joke text for each criterion
             joke_text = joke.get('text', '').lower()
             
             # Length checks
