@@ -1,43 +1,17 @@
 import { Router, RequestHandler } from "express";
 import { verifyBearerToken } from "../middleware/auth";
-import { validateSignature } from "../middleware/signature_validation";
+import { validateSignature, getSignatureGenerationDocs } from "../middleware/signature_validation";
 
-/******** Builder *********/
-import { fetchTodo } from "../controllers/builder/fetchToDo";
-import { addPR } from "../controllers/builder/addTodoPR";
-import { checkToDo } from "../controllers/builder/checkToDo";
-import { updateAuditResult } from "../controllers/builder/updateAuditResult";
-import { addAggregatorInfo } from "../controllers/builder/addAggregatorInfo";
-import { addIssuePR } from "../controllers/builder/addIssuePR";
-import { assignIssue } from "../controllers/builder/assignIssue";
-import { fetchIssue } from "../controllers/builder/fetchIssue";
-import { checkIssue } from "../controllers/builder/checkIssue";
-import { getSourceRepo } from "../controllers/builder/getSourceRepo";
-
-/******** Summarizer *********/
-import { fetchRequest as fetchSummarizerRequest } from "../controllers/summarizer/fetchRequest";
-import { addRequest as addSummarizerRequest } from "../controllers/summarizer/addRequest";
-import { triggerFetchAuditResult as triggerFetchAuditResultSummarizer } from "../controllers/summarizer/triggerFetchAuditResult";
-import { checkRequest as checkSummarizerRequest } from "../controllers/summarizer/checkRequest";
-
-/******** Planner ***********/
-import { fetchRequest as fetchPlannerRequest } from "../controllers/planner/fetchRequest";
-import { addRequest as addPlannerRequest } from "../controllers/planner/addRequest";
-import { checkRequest as checkPlannerRequest } from "../controllers/planner/checkRequest";
-import { triggerFetchAuditResult as triggerFetchAuditResultPlanner } from "../controllers/planner/triggerFetchAuditResult";
-
-/******** Prometheus Website ***********/
-import { getAssignedTo } from "../controllers/prometheus/getAssignedTo";
-import { classification } from "../controllers/prometheus/classification";
-
-/********** Supporter ***********/
-import { bindRequest } from "../controllers/supporter/bindRequest";
-import { fetchRequest as fetchRepoList } from "../controllers/supporter/fetchRequest";
-import { checkRequest as checkRepoRequest } from "../controllers/supporter/checkRequest";
-import { info } from "../controllers/prometheus/info";
+/******** Existing Imports... **********/
 
 const router = Router();
 
+// Add a documentation route for signature generation
+router.get("/docs/signature-generation", (req, res) => {
+  res.json(getSignatureGenerationDocs());
+});
+
+// Add signature validation to ALL routes that modify state or fetch sensitive data
 /********** Builder ***********/
 router.post("/builder/fetch-to-do", validateSignature, fetchTodo as RequestHandler);
 router.post("/builder/add-aggregator-info", validateSignature, addAggregatorInfo as RequestHandler);
@@ -63,6 +37,7 @@ router.post("/planner/check-planner", validateSignature, checkPlannerRequest as 
 router.post("/planner/trigger-fetch-audit-result", validateSignature, triggerFetchAuditResultPlanner as RequestHandler);
 
 /*********** Prometheus Website ***********/
+// Preserve existing bearer token verification where appropriate
 router.get("/prometheus/get-assigned-nodes", validateSignature, getAssignedTo as RequestHandler);
 router.post("/prometheus/classification", verifyBearerToken, validateSignature, classification as RequestHandler);
 router.get("/prometheus/info", validateSignature, info as RequestHandler);
@@ -72,6 +47,7 @@ router.post("/supporter/bind-key-to-github", validateSignature, bindRequest as R
 router.post("/supporter/fetch-repo-list", validateSignature, fetchRepoList as RequestHandler);
 router.post("/supporter/check-request", validateSignature, checkRepoRequest as RequestHandler);
 
+// Public routes remain unchanged
 router.get("/hello", (req, res) => {
   res.json({ message: "Hello World!" });
 });
