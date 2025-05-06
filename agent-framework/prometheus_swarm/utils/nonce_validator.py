@@ -18,6 +18,7 @@ class DistributedNonceValidator:
             max_nonces (int): Maximum number of nonces to store before pruning. Default is 10,000.
         """
         self._nonces: Dict[str, float] = {}
+        self._global_nonces: Set[str] = set()
         self._lock = threading.Lock()
         self._expiration_time = expiration_time
         self._max_nonces = max_nonces
@@ -37,23 +38,29 @@ class DistributedNonceValidator:
             return False
 
         # Create a unique key combining nonce and node_id
-        key = self._generate_key(nonce, node_id)
+        node_nonce_key = self._generate_key(nonce, node_id)
+        global_nonce_key = self._generate_key(nonce, "GLOBAL")
         current_time = time.time()
 
         with self._lock:
             # Prune expired nonces first
             self._prune_expired_nonces(current_time)
 
-            # Check if nonce already exists
-            if key in self._nonces:
+            # Check global nonce set first
+            if global_nonce_key in self._global_nonces:
+                return False
+
+            # Check if nonce already exists for this specific node
+            if node_nonce_key in self._nonces:
                 return False
 
             # If max nonces reached, remove oldest
             if len(self._nonces) >= self._max_nonces:
                 self._remove_oldest_nonce()
 
-            # Add the new nonce
-            self._nonces[key] = current_time
+            # Add the new nonce to both node and global sets
+            self._nonces[node_nonce_key] = current_time
+            self._global_nonces.add(global_nonce_key)
             return True
 
     def _generate_key(self, nonce: str, node_id: str) -> str:
@@ -76,13 +83,16 @@ class DistributedNonceValidator:
         Args:
             current_time (float): The current timestamp.
         """
-        # Inline operation to modify dictionary in-place and avoid creating a new dict
-        expired_keys = [
+        # Inline operation to modify dictionary and set in-place
+        expired_node_keys = [
             key for key, timestamp in self._nonces.items()
             if current_time - timestamp > self._expiration_time
         ]
-        for key in expired_keys:
+        for key in expired_node_keys:
+            # Find the matching global nonce key
+            global_key = self._generate_key(key.split(':')[-1], "GLOBAL")
             del self._nonces[key]
+            self._global_nonces.discard(global_key)
 
     def _remove_oldest_nonce(self) -> None:
         """
@@ -91,4 +101,6 @@ class DistributedNonceValidator:
         if self._nonces:
             # Find and remove the oldest nonce
             oldest_key = min(self._nonces, key=self._nonces.get)
+            global_key = self._generate_key(oldest_key.split(':')[-1], "GLOBAL")
             del self._nonces[oldest_key]
+            self._global_nonces.discard(global_key)
