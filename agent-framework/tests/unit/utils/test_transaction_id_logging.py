@@ -2,6 +2,7 @@
 
 import pytest
 import logging
+import re
 from io import StringIO
 from prometheus_swarm.utils.transaction_id_logging import (
     log_transaction_id_cleanup_start,
@@ -32,8 +33,13 @@ def test_log_transaction_id_cleanup_start(log_capture):
     log_transaction_id_cleanup_start(transaction_id, "Test Context")
 
     log_contents = log_capture.getvalue()
-    assert f"TRANSACTION ID CLEANUP: {transaction_id.upper()}" in log_contents
-    assert "Context: Test Context" in log_contents
+    
+    # Check for section header with transaction ID
+    header_pattern = re.compile(r'TRANSACTION ID CLEANUP: ' + transaction_id.upper(), re.MULTILINE)
+    assert header_pattern.search(log_contents) is not None, "Transaction ID cleanup header not found"
+    
+    # Check for context details
+    assert "Context: Test Context" in log_contents, "Context details not found"
 
 
 def test_log_transaction_id_cleanup_details(log_capture):
