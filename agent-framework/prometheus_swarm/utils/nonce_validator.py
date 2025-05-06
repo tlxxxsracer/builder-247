@@ -56,7 +56,15 @@ class DistributedNonceValidator:
 
             # If max nonces reached, remove oldest
             if len(self._nonces) >= self._max_nonces:
-                self._remove_oldest_nonce()
+                # Use a more robust method to remove oldest nonce
+                keys_sorted_by_time = sorted(self._nonces.items(), key=lambda x: x[1])
+                oldest_key = keys_sorted_by_time[0][0]
+                oldest_global_key = self._generate_key(oldest_key.split(':')[-1], "GLOBAL")
+                
+                del self._nonces[oldest_key]
+                # Use safe key removal from global nonces
+                if oldest_global_key in self._global_nonces:
+                    del self._global_nonces[oldest_global_key]
 
             # Add the new nonce to both node and global sets
             self._nonces[node_nonce_key] = current_time
@@ -98,14 +106,3 @@ class DistributedNonceValidator:
 
         for key in expired_global_keys:
             del self._global_nonces[key]
-
-    def _remove_oldest_nonce(self) -> None:
-        """
-        Remove the oldest nonce when the maximum number of nonces is reached.
-        """
-        if self._nonces:
-            # Find and remove the oldest nonce
-            oldest_key = min(self._nonces, key=self._nonces.get)
-            global_key = self._generate_key(oldest_key.split(':')[-1], "GLOBAL")
-            del self._nonces[oldest_key]
-            del self._global_nonces[global_key]
