@@ -41,17 +41,18 @@ class DistributedNonceValidator:
         current_time = time.time()
 
         with self._lock:
-            # Prune expired nonces if needed
+            # Prune expired nonces first
             self._prune_expired_nonces(current_time)
 
             # Check if nonce already exists
             if key in self._nonces:
                 return False
 
-            # Add new nonce with current timestamp
+            # If max nonces reached, remove oldest
             if len(self._nonces) >= self._max_nonces:
                 self._remove_oldest_nonce()
 
+            # Add the new nonce
             self._nonces[key] = current_time
             return True
 
@@ -75,16 +76,19 @@ class DistributedNonceValidator:
         Args:
             current_time (float): The current timestamp.
         """
-        # Remove expired nonces
-        self._nonces = {
-            key: timestamp for key, timestamp in self._nonces.items() 
-            if current_time - timestamp <= self._expiration_time
-        }
+        # Inline operation to modify dictionary in-place and avoid creating a new dict
+        expired_keys = [
+            key for key, timestamp in self._nonces.items()
+            if current_time - timestamp > self._expiration_time
+        ]
+        for key in expired_keys:
+            del self._nonces[key]
 
     def _remove_oldest_nonce(self) -> None:
         """
         Remove the oldest nonce when the maximum number of nonces is reached.
         """
         if self._nonces:
+            # Find and remove the oldest nonce
             oldest_key = min(self._nonces, key=self._nonces.get)
             del self._nonces[oldest_key]
