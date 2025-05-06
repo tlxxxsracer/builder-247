@@ -55,14 +55,16 @@ def test_cross_thread_duplicate_nonce_validation():
     validator = DistributedNonceValidator()
     concurrent_results = []
     shared_nonce = "parallel_test_nonce"
+    lock = threading.Lock()
 
     def attempt_nonce_validation(node_id):
         result = validator.validate_nonce(shared_nonce, node_id)
-        concurrent_results.append(result)
+        with lock:
+            concurrent_results.append(result)
 
     # Create multiple threads trying to validate the same nonce
     threads = [
-        threading.Thread(target=attempt_nonce_validation, args=(f"node_{i}"))
+        threading.Thread(target=attempt_nonce_validation, kwargs={"node_id": f"node_{i}"})
         for i in range(10)
     ]
 
@@ -74,6 +76,6 @@ def test_cross_thread_duplicate_nonce_validation():
     for thread in threads:
         thread.join()
 
-    # Only one thread should succeed in validating the nonce
+    # Exactly one thread should succeed in validating the nonce
     assert concurrent_results.count(True) == 1
     assert concurrent_results.count(False) == 9
