@@ -34,8 +34,8 @@ def test_log_transaction_id_cleanup_start(log_capture):
 
     log_contents = log_capture.getvalue()
     
-    # Check for section header with transaction ID
-    header_pattern = re.compile(r'TRANSACTION ID CLEANUP: ' + transaction_id.upper(), re.MULTILINE)
+    # Updated to match exact pattern
+    header_pattern = re.compile(r' TRANSACTION ID CLEANUP: ' + transaction_id.upper() + r' ', re.MULTILINE)
     assert header_pattern.search(log_contents) is not None, "Transaction ID cleanup header not found"
     
     # Check for context details
