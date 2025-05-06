@@ -18,7 +18,7 @@ class DistributedNonceValidator:
             max_nonces (int): Maximum number of nonces to store before pruning. Default is 10,000.
         """
         self._nonces: Dict[str, float] = {}
-        self._global_nonces: Set[str] = set()
+        self._global_nonces: Dict[str, float] = {}
         self._lock = threading.Lock()
         self._expiration_time = expiration_time
         self._max_nonces = max_nonces
@@ -60,7 +60,7 @@ class DistributedNonceValidator:
 
             # Add the new nonce to both node and global sets
             self._nonces[node_nonce_key] = current_time
-            self._global_nonces.add(global_nonce_key)
+            self._global_nonces[global_nonce_key] = current_time
             return True
 
     def _generate_key(self, nonce: str, node_id: str) -> str:
@@ -83,16 +83,21 @@ class DistributedNonceValidator:
         Args:
             current_time (float): The current timestamp.
         """
-        # Inline operation to modify dictionary and set in-place
+        # Inline operation to modify dictionaries in-place
         expired_node_keys = [
             key for key, timestamp in self._nonces.items()
             if current_time - timestamp > self._expiration_time
         ]
+        expired_global_keys = [
+            key for key, timestamp in self._global_nonces.items()
+            if current_time - timestamp > self._expiration_time
+        ]
+
         for key in expired_node_keys:
-            # Find the matching global nonce key
-            global_key = self._generate_key(key.split(':')[-1], "GLOBAL")
             del self._nonces[key]
-            self._global_nonces.discard(global_key)
+
+        for key in expired_global_keys:
+            del self._global_nonces[key]
 
     def _remove_oldest_nonce(self) -> None:
         """
@@ -103,4 +108,4 @@ class DistributedNonceValidator:
             oldest_key = min(self._nonces, key=self._nonces.get)
             global_key = self._generate_key(oldest_key.split(':')[-1], "GLOBAL")
             del self._nonces[oldest_key]
-            self._global_nonces.discard(global_key)
+            del self._global_nonces[global_key]
