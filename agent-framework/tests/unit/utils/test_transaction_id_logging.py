@@ -32,8 +32,8 @@ def test_log_transaction_id_cleanup_start(log_capture):
     log_transaction_id_cleanup_start(transaction_id, "Test Context")
 
     log_contents = log_capture.getvalue()
-    assert f"Transaction ID Cleanup: {transaction_id}" in log_contents
-    assert "Test Context" in log_contents
+    assert f"TRANSACTION ID CLEANUP: {transaction_id.upper()}" in log_contents
+    assert "Context: Test Context" in log_contents
 
 
 def test_log_transaction_id_cleanup_details(log_capture):
