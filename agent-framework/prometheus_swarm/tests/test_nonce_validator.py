@@ -44,29 +44,33 @@ def test_nonce_validator_max_nonces():
         validator.validate_nonce(f"nonce_{i}", "node1")
     
     # Check that nonces are being pruned
-    assert len(validator._nonces) <= 3
+    assert len(validator._nonces) == 3
 
 def test_nonce_validator_thread_safety(num_threads=10, nonces_per_thread=100):
     """Test thread-safe behavior of nonce validator."""
     from concurrent.futures import ThreadPoolExecutor
     
     validator = DistributedNonceValidator()
-    valid_nonces = 0
-    invalid_nonces = 0
+    unique_nonces = set()
+    duplicate_nonces = 0
     
     def test_thread(thread_id):
-        nonlocal valid_nonces, invalid_nonces
+        nonlocal unique_nonces, duplicate_nonces
+        local_unique_nonces = 0
+        
         for i in range(nonces_per_thread):
             nonce = f"thread_{thread_id}_nonce_{i}"
             is_valid = validator.validate_nonce(nonce, f"node_{thread_id}")
             if is_valid:
-                valid_nonces += 1
+                local_unique_nonces += 1
             else:
-                invalid_nonces += 1
+                duplicate_nonces += 1
+        
+        return local_unique_nonces
     
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        executor.map(test_thread, range(num_threads))
+        results = list(executor.map(test_thread, range(num_threads)))
     
-    # Expect the number of valid nonces to equal total nonces
-    assert valid_nonces == num_threads * nonces_per_thread
-    assert invalid_nonces > 0
+    # Verify thread safety and nonce uniqueness
+    assert sum(results) == num_threads * nonces_per_thread
+    assert duplicate_nonces > 0
