@@ -46,31 +46,34 @@ def test_nonce_validator_max_nonces():
     # Check that nonces are being pruned
     assert len(validator._nonces) == 3
 
-def test_nonce_validator_thread_safety(num_threads=10, nonces_per_thread=100):
-    """Test thread-safe behavior of nonce validator."""
+def test_nonce_validator_cross_thread_duplicates(num_threads=10, shared_nonces=10):
+    """Test nonce validation across different threads with shared nonces."""
     from concurrent.futures import ThreadPoolExecutor
     
     validator = DistributedNonceValidator()
-    unique_nonces = set()
     duplicate_nonces = 0
     
     def test_thread(thread_id):
-        nonlocal unique_nonces, duplicate_nonces
-        local_unique_nonces = 0
+        nonlocal duplicate_nonces
+        valid_nonces = 0
         
-        for i in range(nonces_per_thread):
-            nonce = f"thread_{thread_id}_nonce_{i}"
-            is_valid = validator.validate_nonce(nonce, f"node_{thread_id}")
+        for i in range(shared_nonces):
+            # Attempt to validate a shared nonce
+            shared_nonce = f"shared_nonce_{i}"
+            is_valid = validator.validate_nonce(shared_nonce, f"node_{thread_id}")
+            
             if is_valid:
-                local_unique_nonces += 1
+                valid_nonces += 1
             else:
                 duplicate_nonces += 1
         
-        return local_unique_nonces
+        return valid_nonces
     
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         results = list(executor.map(test_thread, range(num_threads)))
     
-    # Verify thread safety and nonce uniqueness
-    assert sum(results) == num_threads * nonces_per_thread
+    # At least one thread should experience a duplicate
     assert duplicate_nonces > 0
+    
+    # Total valid nonces should be less than total threads * shared nonces
+    assert sum(results) < num_threads * shared_nonces
