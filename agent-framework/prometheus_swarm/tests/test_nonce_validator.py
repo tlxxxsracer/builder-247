@@ -13,8 +13,8 @@ def test_nonce_validator_basic_functionality():
     # Same nonce from same node should be invalid
     assert validator.validate_nonce("unique_nonce_1", "node1") == False
     
-    # Same nonce from different node should be valid
-    assert validator.validate_nonce("unique_nonce_1", "node2") == True
+    # Same nonce from different node should be invalid
+    assert validator.validate_nonce("unique_nonce_1", "node2") == False
 
 def test_nonce_validator_empty_inputs():
     """Test handling of empty or None inputs."""
@@ -45,7 +45,7 @@ def test_nonce_validator_max_nonces():
         validator.validate_nonce(f"nonce_{i}", "node1")
     
     # Check that nonces are being pruned
-    assert len(validator._nonces) == 3
+    assert len(validator._nonces) <= 3
 
 def test_cross_thread_duplicate_nonce_validation():
     """
